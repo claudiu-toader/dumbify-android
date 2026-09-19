@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Dumbify</string>
+    <string name="widget_name">Dumbify — List</string>
+    <string name="widget_description">The allowed apps and today\'s time in each.</string>
+</resources>

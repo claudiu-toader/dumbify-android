@@ -1,0 +1,29 @@
+# Build output
+# `build/` rather than `/build` — the latter only matches the root, leaving
+# app/build/ (30 MB of debug APK and intermediates) tracked.
+build/
+.gradle/
+.kotlin/
+.cxx/
+.externalNativeBuild/
+captures/
+
+# Local configuration and secrets
+# local.properties carries this machine's sdk.dir and is regenerated on clone.
+local.properties
+*.keystore
+*.jks
+keystore.properties
+signing.properties
+
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# AI / workflow tooling
+.claude/
+openspec/

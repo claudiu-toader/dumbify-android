@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The Industry light ground. Its dark counterpart is in values-night;
+         there is no third theme and no dynamic colour — see design decisions 9
+         and 13. The window background is the ground itself so there is no
+         white flash before the first Compose frame. -->
+    <style name="Theme.Dumbify" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/industry_bg</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:forceDarkAllowed">false</item>
+    </style>
+</resources>

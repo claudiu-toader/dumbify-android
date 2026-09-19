@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The Industry dark ground. This only paints the window behind the
+         Compose tree: the app's own ground is chosen by DumbifyTheme from the
+         user's setting, which may override the device. The two disagree only
+         for the frame before Compose draws. -->
+    <style name="Theme.Dumbify" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/industry_bg</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:forceDarkAllowed">false</item>
+    </style>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The dark ground tones, matching IndustryDarkPalette. These exist only for
+     the window background before Compose draws. -->
+<resources>
+    <color name="industry_bg">#FF16181A</color>
+    <color name="industry_text">#FFECECED</color>
+</resources>

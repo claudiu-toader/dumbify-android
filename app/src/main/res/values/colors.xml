@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Industry ground tones. The full ramp lives in Kotlin (IndustryPalette);
+     these two exist only for the window background before Compose draws. -->
+<resources>
+    <color name="industry_bg">#FFF2F2F3</color>
+    <color name="industry_text">#FF1D1F20</color>
+</resources>
