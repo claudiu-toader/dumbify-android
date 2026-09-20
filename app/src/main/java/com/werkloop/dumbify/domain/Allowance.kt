@@ -5,10 +5,12 @@ import java.time.LocalDate
 /**
  * The daily request ration.
  *
- * The allowance is a domain value, not a user setting: the settings screen is
- * five switches and no numeric control, so nothing in the app changes
- * [PER_DAY]. It is read from here by every caller precisely so that surfacing
- * it later touches no screen (app-requests "Requests are rationed per day").
+ * The allowance is a domain value, not a user setting: no screen changes
+ * [PER_DAY]. That is now a choice rather than a consequence of the settings
+ * screen's shape — settings grew a rules section and a numeric control for the
+ * app cap, so a control for this could follow if the spec ever asked for one.
+ * Every caller reads it from here precisely so that surfacing it would touch no
+ * screen (app-requests "Requests are rationed per day").
  */
 object Allowance {
 

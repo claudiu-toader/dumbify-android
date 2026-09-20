@@ -20,6 +20,9 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import androidx.compose.ui.unit.dp
+import androidx.glance.action.actionStartActivity
+import androidx.glance.action.clickable
+import com.werkloop.dumbify.MainActivity
 import com.werkloop.dumbify.domain.WindowEvaluator
 import com.werkloop.dumbify.domain.allowedApps
 import com.werkloop.dumbify.ui.Fmt
@@ -45,6 +48,8 @@ class DumbifyWidget : GlanceAppWidget() {
             context.applicationContext, WidgetEntryPoint::class.java,
         )
         val clock = deps.clock()
+        // Live, like every other read of this (design decision 8).
+        val isDefaultHome = deps.permissionChecker().isDefaultHome()
         val saved = deps.repository().state.value
         val apps = deps.appCatalog().installedApps()
         val usage = deps.usageReader().today()
@@ -54,7 +59,13 @@ class DumbifyWidget : GlanceAppWidget() {
         val window = WindowEvaluator.windowStateAt(localNow, saved.schedule)
         val grant = saved.grant?.takeIf { it.isActive(now) }
 
-        val rows = if (window.inForce) {
+        // Without the home role Dumbify enforces nothing: the Home button goes
+        // elsewhere and every hidden app is reachable. Drawing the list here
+        // would be the same lie the launcher's own panel exists to avoid, and
+        // the countdown would be counting to an event with no effect.
+        val enforcing = isDefaultHome
+
+        val rows = if (enforcing && window.inForce) {
             allowedApps(apps, saved.allowedPackages).take(MAX_ROWS).map { app ->
                 app.label to Fmt.duration(usage?.perPackage?.get(app.packageName))
             } + listOfNotNull(
@@ -71,7 +82,7 @@ class DumbifyWidget : GlanceAppWidget() {
         // Outside a window there is no list — only how long until there is one.
         // Never a hidden app's name, never a count of them
         // (home-widget "The widget does not leak hidden apps").
-        val countdown = if (window.inForce) null else {
+        val countdown = if (!enforcing || window.inForce) null else {
             window.nextWindowStart
                 ?.let { Fmt.coarseRemaining(Duration.between(localNow, it)) + " TO THE NEXT WINDOW" }
                 ?: "NO WINDOW SCHEDULED"
@@ -83,6 +94,7 @@ class DumbifyWidget : GlanceAppWidget() {
                 clock = Fmt.clock(localNow),
                 rows = rows,
                 countdown = countdown,
+                notEnforcing = !enforcing,
             )
         }
     }
@@ -104,11 +116,30 @@ private fun WidgetBody(
     clock: String,
     rows: List<Pair<String, String>>,
     countdown: String?,
+    notEnforcing: Boolean,
 ) {
+    // **A Glance Column takes at most 10 children.** Over that it does not fail
+    // loudly — `translateEmittableColumn` truncates and logs, so the last
+    // elements simply vanish. A flat tree here emitted 12 in the not-enforcing
+    // state and silently lost the figures; the list state could reach 11 with
+    // five apps and a grant, losing the grant row.
+    //
+    // So the root is kept to six children and each state is one nested Column.
+    // Anything added below must keep that arithmetic true.
     Column(
         modifier = GlanceModifier
             .fillMaxWidth()
             .background(Ground)
+            // Tappable only in the state that asks for an action. The widget is
+            // a glance everywhere else, and a tap target with nothing to do is
+            // worse than none.
+            .then(
+                if (notEnforcing) {
+                    GlanceModifier.clickable(actionStartActivity<MainActivity>())
+                } else {
+                    GlanceModifier
+                }
+            )
             .padding(horizontal = 14.dp, vertical = 20.dp)
     ) {
         Text(dateLine, style = TextStyle(color = InkMuted, fontSize = 12.sp, fontWeight = FontWeight.Medium))
@@ -117,21 +148,55 @@ private fun WidgetBody(
         Spacer(GlanceModifier.fillMaxWidth().height(1.dp).background(Rule))
         Spacer(GlanceModifier.height(10.dp))
 
-        if (countdown != null) {
+        if (notEnforcing) {
+            NotEnforcing()
+        } else if (countdown != null) {
             Text(countdown, style = TextStyle(color = InkMuted, fontSize = 12.sp))
         } else {
-            rows.forEach { (name, meta) ->
-                Row(
-                    modifier = GlanceModifier.fillMaxWidth().padding(vertical = 3.dp),
-                    verticalAlignment = Alignment.Vertical.CenterVertically,
-                ) {
-                    Text(
-                        name.uppercase(),
-                        style = TextStyle(color = Ink, fontSize = 15.sp, fontWeight = FontWeight.Medium),
-                        modifier = GlanceModifier.defaultWeight(),
-                    )
-                    Text(meta, style = TextStyle(color = InkMuted, fontSize = 10.sp))
-                }
+            AppList(rows)
+        }
+    }
+}
+
+/**
+ * The statement, and nothing else.
+ *
+ * No app names and no count, the same as every other surface when apps are
+ * hidden (home-widget "The widget does not leak hidden apps"). No figures
+ * either: this surface exists to say that nothing is being enforced, and a row
+ * of statistics beside that message reads as though the widget were still
+ * doing its job.
+ */
+@androidx.compose.runtime.Composable
+private fun NotEnforcing() {
+    Column(modifier = GlanceModifier.fillMaxWidth()) {
+        Text(
+            "NOT YOUR HOME SCREEN",
+            style = TextStyle(color = Ink, fontSize = 13.sp, fontWeight = FontWeight.Medium),
+        )
+        Spacer(GlanceModifier.height(6.dp))
+        Text(
+            "Dumbify is not enforcing anything — hidden apps are still reachable. " +
+                "Tap to make it your home screen.",
+            style = TextStyle(color = InkMuted, fontSize = 12.sp),
+        )
+    }
+}
+
+@androidx.compose.runtime.Composable
+private fun AppList(rows: List<Pair<String, String>>) {
+    Column(modifier = GlanceModifier.fillMaxWidth()) {
+        rows.forEach { (name, meta) ->
+            Row(
+                modifier = GlanceModifier.fillMaxWidth().padding(vertical = 3.dp),
+                verticalAlignment = Alignment.Vertical.CenterVertically,
+            ) {
+                Text(
+                    name.uppercase(),
+                    style = TextStyle(color = Ink, fontSize = 15.sp, fontWeight = FontWeight.Medium),
+                    modifier = GlanceModifier.defaultWeight(),
+                )
+                Text(meta, style = TextStyle(color = InkMuted, fontSize = 10.sp))
             }
         }
     }

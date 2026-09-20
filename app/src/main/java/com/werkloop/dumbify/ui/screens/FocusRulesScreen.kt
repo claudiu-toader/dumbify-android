@@ -29,6 +29,7 @@ import com.werkloop.dumbify.ui.components.Blueprint
 import com.werkloop.dumbify.ui.components.ButtonVariant
 import com.werkloop.dumbify.ui.components.DumbButton
 import com.werkloop.dumbify.ui.components.SegmentedControl
+import com.werkloop.dumbify.ui.components.DumbBlockButton
 import com.werkloop.dumbify.ui.components.SetupFooter
 import com.werkloop.dumbify.ui.theme.DumbType
 import com.werkloop.dumbify.ui.theme.Spacing
@@ -53,6 +54,8 @@ data class FocusRulesUiState(
     /** 24 booleans — the resulting-window bar. */
     val dumbHours: List<Boolean>,
     val windowLabel: String,
+    /** True when this screen was opened from settings rather than from setup. */
+    val editing: Boolean = false,
 )
 
 @Composable
@@ -67,7 +70,9 @@ fun FocusRulesScreen(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxSize().padding(Spacing.s6)) {
-        Text("STEP 3 / 4", style = DumbType.Mono.copy(letterSpacing = 0.14.em), color = theme.neutral600)
+        if (!state.editing) {
+            Text("STEP 3 / 4", style = DumbType.Mono.copy(letterSpacing = 0.14.em), color = theme.neutral600)
+        }
         Text(
             "FOCUS RULES",
             style = DumbType.H2.copy(fontSize = 30.sp),
@@ -152,7 +157,11 @@ fun FocusRulesScreen(
             WindowBarPanel(state, Modifier.padding(bottom = Spacing.s4))
         }
 
-        SetupFooter(onBack = onBack, onContinue = onContinue)
+        if (state.editing) {
+            DumbBlockButton(label = "DONE", onClick = onContinue)
+        } else {
+            SetupFooter(onBack = onBack, onContinue = onContinue)
+        }
     }
 }
 

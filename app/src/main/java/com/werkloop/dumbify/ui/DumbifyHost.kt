@@ -1,6 +1,7 @@
 package com.werkloop.dumbify.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -84,6 +85,7 @@ fun DumbifyHost(
                     state = state,
                     onQueryChange = vm::setQuery,
                     onToggle = { vm.toggle(it) },
+                    onMaxAppsChange = vm::setMaxApps,
                     onBack = { back() },
                     onContinue = { go(FocusRules) },
                 )
@@ -166,9 +168,41 @@ fun DumbifyHost(
                     onStartRemoval = vm::startRemoval,
                     onCancelRemoval = vm::cancelRemoval,
                     onResumeAsHome = vm::resumeAsHome,
+                    onEditAllowlist = { go(AllowlistEdit) },
+                    onEditFocusRules = { go(FocusRulesEdit) },
                     onConfirmRemoval = vm::confirmRemoval,
                     onDismissRemovalDialog = vm::dismissRemovalDialog,
                     onBack = { back() },
+                )
+            }
+            // The same two screens, reached from settings instead of setup.
+            // `setEditing` swaps the step label and the Back/Continue footer
+            // for a single DONE, and nothing else about them changes.
+            entry<AllowlistEdit> {
+                val vm = hiltViewModel<AllowlistViewModel>()
+                val state by vm.state.collectAsStateWithLifecycle()
+                LaunchedEffect(Unit) { vm.setEditing(true) }
+                AllowlistScreen(
+                    state = state,
+                    onQueryChange = vm::setQuery,
+                    onToggle = { vm.toggle(it) },
+                    onMaxAppsChange = vm::setMaxApps,
+                    onBack = { back() },
+                    onContinue = { back() },
+                )
+            }
+            entry<FocusRulesEdit> {
+                val vm = hiltViewModel<FocusRulesViewModel>()
+                val state by vm.state.collectAsStateWithLifecycle()
+                LaunchedEffect(Unit) { vm.setEditing(true) }
+                FocusRulesScreen(
+                    state = state,
+                    onModeChange = { vm.setMode(it) },
+                    onRepeatChange = { vm.setRepeat(it) },
+                    onSelectRow = vm::select,
+                    onCycleRow = vm::cycle,
+                    onBack = { back() },
+                    onContinue = { back() },
                 )
             }
         },

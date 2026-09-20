@@ -22,3 +22,13 @@ import kotlinx.serialization.Serializable
 @Serializable data object Request : NavKey
 @Serializable data object Stats : NavKey
 @Serializable data object Settings : NavKey
+
+/**
+ * The two setup screens, reached again from settings.
+ *
+ * Separate keys rather than a flag on the setup keys, so the back stack itself
+ * records which flow the user is in — the same reason the stack is owned rather
+ * than inferred (design decision 7).
+ */
+@Serializable data object AllowlistEdit : NavKey
+@Serializable data object FocusRulesEdit : NavKey

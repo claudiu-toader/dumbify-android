@@ -2,8 +2,14 @@ package com.werkloop.dumbify.ui.vm
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.werkloop.dumbify.data.DeviceData
 import com.werkloop.dumbify.data.DumbifyRepository
+import com.werkloop.dumbify.domain.AppCap
 import com.werkloop.dumbify.domain.DumbClock
+import com.werkloop.dumbify.domain.FocusMode
+import com.werkloop.dumbify.domain.Repeat
+import com.werkloop.dumbify.domain.Schedule
+import com.werkloop.dumbify.domain.countsFor
 import com.werkloop.dumbify.domain.PendingRemoval
 import com.werkloop.dumbify.system.HomeRoleController
 import com.werkloop.dumbify.system.SystemNavigator
@@ -26,6 +32,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val repository: DumbifyRepository,
+    private val device: DeviceData,
     private val navigator: SystemNavigator,
     private val homeRole: HomeRoleController,
     private val clock: DumbClock,
@@ -38,9 +45,13 @@ class SettingsViewModel @Inject constructor(
     // every change rather than mirrored into the repository.
     private val offeredAsHome = MutableStateFlow(homeRole.isOfferedAsHome())
 
+    // Paired because `combine` tops out at five flows and this needs six: the
+    // ticker has to stay, or the removal countdown freezes between writes.
+    private val savedWithApps = combine(repository.state, device.apps) { saved, apps -> saved to apps }
+
     val state: StateFlow<SettingsUiState> = combine(
-        repository.state, greyscaleNotice, confirming, offeredAsHome, seconds(),
-    ) { saved, notice, confirmDialog, isHome, _ ->
+        savedWithApps, greyscaleNotice, confirming, offeredAsHome, seconds(),
+    ) { (saved, apps), notice, confirmDialog, isHome, _ ->
         val settings = saved.settings
         val pending = saved.pendingRemoval
         val remaining = pending?.let { Duration.between(clock.now(), it.confirmableAt) }
@@ -77,8 +88,21 @@ class SettingsViewModel @Inject constructor(
             confirmingRemoval = confirmDialog,
             greyscaleNotice = notice && settings.greyscale,
             offeredAsHome = isHome,
+            // Same derivation the allowlist screen uses, so the two can never
+            // disagree (app-allowlist "Counts are derived, never authored").
+            allowedSummary = countsFor(apps, saved.allowedPackages).let {
+                "${it.allowed} / ${AppCap.clamp(settings.maxApps, it.installed)}"
+            },
+            scheduleSummary = describe(saved.schedule),
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsUiState(emptyList()))
+
+    /** The schedule in one phrase, for the row that opens the editor. */
+    private fun describe(schedule: Schedule): String = when {
+        schedule.mode == FocusMode.AlwaysOn -> "Always on"
+        schedule.repeat == Repeat.Daily -> schedule.dailyPreset.label
+        else -> "Day by day"
+    }
 
     fun toggle(key: SettingKey, on: Boolean) = viewModelScope.launch {
         val current = repository.state.value.settings

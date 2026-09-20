@@ -29,8 +29,12 @@ class FocusRulesViewModel @Inject constructor(
 
     private val selectedDay = MutableStateFlow(clock.localNow().dayOfWeek)
 
+    /** Set by the host when the screen is reached from settings, not setup. */
+    private val editing = MutableStateFlow(false)
+    fun setEditing(value: Boolean) { editing.value = value }
+
     val state: StateFlow<FocusRulesUiState> =
-        combine(repository.state, selectedDay) { saved, day ->
+        combine(repository.state, selectedDay, editing) { saved, day, isEditing ->
             val schedule = saved.schedule
             val scope = WindowEvaluator.scopeOf(schedule, day)
             FocusRulesUiState(
@@ -39,6 +43,7 @@ class FocusRulesViewModel @Inject constructor(
                 rows = rowsFor(schedule, day),
                 dumbHours = WindowEvaluator.dumbHoursFor(scope, schedule),
                 windowLabel = WindowEvaluator.scopeLabel(scope),
+                editing = isEditing,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), initial(clock))
 

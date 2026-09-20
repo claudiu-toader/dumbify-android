@@ -142,6 +142,12 @@ data class PendingRemoval(
 @Serializable
 data class AppSettings(
     val darkTheme: Boolean? = null,
+    /**
+     * The most apps that may be allowed at once, chosen by the user on the
+     * allowlist step and editable from settings. Defaults to the six the old
+     * guidance advised (see [AppCap]).
+     */
+    val maxApps: Int = AppCap.DEFAULT,
     val bigClock: Boolean = true,
     val greyscale: Boolean = false,
     val notificationDigest: Boolean = false,

@@ -1,8 +1,10 @@
 package com.werkloop.dumbify.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.werkloop.dumbify.ui.components.Blueprint
@@ -28,7 +31,7 @@ import com.werkloop.dumbify.ui.theme.DumbType
 import com.werkloop.dumbify.ui.theme.Spacing
 import com.werkloop.dumbify.ui.theme.theme
 
-/** The five switches, identified so the screen cannot silently grow a sixth. */
+/** The five switches, identified so the switch block cannot silently grow a sixth. */
 enum class SettingKey { DarkTheme, BigClock, Greyscale, NotificationDigest, RemovalDelay }
 
 @Immutable
@@ -48,6 +51,10 @@ data class SettingsUiState(
      * candidate for the Home button and the screen offers to put it back.
      */
     val offeredAsHome: Boolean = true,
+    /** "3 / 6" — the allowlist against the user's cap. */
+    val allowedSummary: String = "",
+    /** "21:00–07:00", "Always on", … — the schedule in one phrase. */
+    val scheduleSummary: String = "",
 )
 
 @Composable
@@ -58,6 +65,8 @@ fun SettingsScreen(
     onStartRemoval: () -> Unit,
     onCancelRemoval: () -> Unit,
     onResumeAsHome: () -> Unit,
+    onEditAllowlist: () -> Unit,
+    onEditFocusRules: () -> Unit,
     onConfirmRemoval: () -> Unit,
     onDismissRemovalDialog: () -> Unit,
     onBack: () -> Unit,
@@ -84,6 +93,26 @@ fun SettingsScreen(
                 .padding(horizontal = Spacing.s6)
                 .padding(bottom = Spacing.s6)
         ) {
+            // The setup decisions, editable here rather than only once during
+            // setup (settings "Every setup decision is editable"). These open
+            // the real setup screens, so there is one allowlist picker and one
+            // schedule editor rather than two that drift apart.
+            Text(
+                "RULES",
+                style = DumbType.MonoSmall.copy(letterSpacing = 0.14.em),
+                color = theme.neutral600,
+                modifier = Modifier.padding(top = Spacing.s2, bottom = Spacing.s3),
+            )
+            HorizontalDivider(color = theme.divider)
+            NavRow("ALLOWED APPS", state.allowedSummary, onEditAllowlist)
+            NavRow("FOCUS RULES", state.scheduleSummary, onEditFocusRules)
+
+            Text(
+                "APPEARANCE AND STRICTNESS",
+                style = DumbType.MonoSmall.copy(letterSpacing = 0.14.em),
+                color = theme.neutral600,
+                modifier = Modifier.padding(top = Spacing.s6, bottom = Spacing.s3),
+            )
             HorizontalDivider(color = theme.divider)
             state.toggles.forEach { toggle ->
                 Row(
@@ -137,6 +166,34 @@ fun SettingsScreen(
             onDismiss = onDismissRemovalDialog,
         )
     }
+}
+
+/**
+ * A settings row that opens another screen, with its current value beside it.
+ *
+ * The value is the point: a row reading "ALLOWED APPS   3 / 6" answers the
+ * question most visits are asking without the visit.
+ */
+@Composable
+private fun NavRow(name: String, value: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .defaultMinSize(minHeight = 56.dp)
+            .padding(vertical = Spacing.s4),
+        horizontalArrangement = Arrangement.spacedBy(Spacing.s4),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(name, style = DumbType.RowTitle, color = theme.text, modifier = Modifier.weight(1f))
+        Text(
+            value,
+            style = DumbType.RowTitle.copy(fontSize = 13.sp, letterSpacing = 0.08.em),
+            color = theme.accent700,
+        )
+        Text("›", style = DumbType.RowTitle, color = theme.neutral500)
+    }
+    HorizontalDivider(color = theme.divider)
 }
 
 /**
