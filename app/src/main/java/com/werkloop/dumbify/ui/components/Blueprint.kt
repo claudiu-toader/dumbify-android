@@ -5,57 +5,38 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.werkloop.dumbify.ui.theme.theme
 
 /**
- * The blueprint frame: a hairline box with four registration marks drawn
- * *outside* its corners.
+ * A framed information panel: a hairline box, square-cornered, on the page
+ * ground.
  *
- * In the CSS each mark is an 11x11 corner offset -6px from the box, holding a
- * 1px cross. That means every arm extends 6px beyond the border and 5px inside
- * it, so the marks read as survey ticks rather than as a second border.
+ * **No registration marks, against the prototype.** `Dumbify.dc.html` draws
+ * four corner crosses outside every `.blueprint` panel — an 11×11 mark offset
+ * -6px, so each arm extends past the border and reads as a survey tick. This
+ * implemented them faithfully and they are now gone everywhere, by decision:
+ * at phone size they read as crosses stuck to the corners rather than as
+ * draughting annotation, and eight marked panels turn a deliberately quiet
+ * surface into a noisy one.
  *
- * Nothing here clips, so callers must leave at least [MarkOverhang] of room
- * around a Blueprint or the marks will be drawn over by a neighbour.
+ * The drawing code is deleted rather than left behind a `showMarks = false`
+ * default, for the same reason the button variant was (design-system "Buttons
+ * carry no registration marks"): a parameter nothing sets is how the marks
+ * would drift back.
+ *
+ * What the frame still is: the one thing that says "this is a panel, not
+ * content". Eight call sites rely on it for that, and on the border token.
  */
-val MarkOverhang: Dp = 6.dp
-
 @Composable
 fun Blueprint(
     modifier: Modifier = Modifier,
     borderColor: Color = theme.divider,
-    markColor: Color = theme.text.copy(alpha = 0.55f),
-    showMarks: Boolean = true,
     content: @Composable BoxScope.() -> Unit,
 ) {
     Box(
-        modifier = modifier
-            .border(1.dp, borderColor)
-            .then(if (showMarks) Modifier.registrationMarks(markColor) else Modifier),
+        modifier = modifier.border(1.dp, borderColor),
         content = content,
     )
-}
-
-private fun Modifier.registrationMarks(color: Color): Modifier = drawWithContent {
-    drawContent()
-    val out = 6.dp.toPx()
-    val inn = 5.dp.toPx()
-    val w = 1.dp.toPx()
-    val corners = listOf(
-        Offset(0f, 0f),
-        Offset(size.width, 0f),
-        Offset(0f, size.height),
-        Offset(size.width, size.height),
-    )
-    corners.forEach { c ->
-        // Vertical arm of the cross, spanning the corner.
-        drawLine(color, Offset(c.x, c.y - out), Offset(c.x, c.y + inn), strokeWidth = w)
-        // Horizontal arm.
-        drawLine(color, Offset(c.x - out, c.y), Offset(c.x + inn, c.y), strokeWidth = w)
-    }
 }

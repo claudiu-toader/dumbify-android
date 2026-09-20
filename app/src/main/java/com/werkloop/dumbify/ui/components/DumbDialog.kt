@@ -32,13 +32,7 @@ import com.werkloop.dumbify.ui.theme.theme
  * platform's scrim, so the composable takes the ground itself and lets the
  * `Dialog` window supply the dimming.
  *
- * **No registration marks, against the prototype.** `Dumbify.dc.html` gives the
- * dialog `class="dialog blueprint"` with four corner marks, and this followed
- * it. It is wrong here: the marks annotate a *panel* — something laid out on
- * the page for inspection — and a modal asking a yes/no question is not being
- * inspected. On a floating box over a scrim they read as crosses stuck to the
- * corners rather than as survey ticks, and they pull the eye outward exactly
- * when it should be on the question. The six information panels keep theirs.
+ * No registration marks — see [Blueprint], which no longer draws them anywhere.
  */
 @Composable
 fun DumbDialog(
@@ -62,9 +56,6 @@ fun DumbDialog(
             Blueprint(
                 modifier = Modifier.widthIn(max = 440.dp).fillMaxWidth(),
                 borderColor = theme.divider,
-                // No registration marks, deliberately against the prototype —
-                // see the note above.
-                showMarks = false,
             ) {
                 Column(
                     modifier = Modifier

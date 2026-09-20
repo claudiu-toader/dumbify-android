@@ -21,7 +21,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.werkloop.dumbify.ui.components.Blueprint
-import com.werkloop.dumbify.ui.components.MarkOverhang
 import com.werkloop.dumbify.ui.components.DumbBlockButton
 import com.werkloop.dumbify.ui.theme.DumbType
 import com.werkloop.dumbify.ui.theme.Spacing
@@ -66,7 +65,7 @@ fun WelcomeScreen(
         }
 
         Column(verticalArrangement = Arrangement.spacedBy(Spacing.s6)) {
-            BeforeAfterPanel(state, Modifier.padding(horizontal = MarkOverhang))
+            BeforeAfterPanel(state)
             DumbBlockButton("BEGIN SETUP", onBegin)
             Text(
                 "3 PERMISSIONS · 2 MINUTES",

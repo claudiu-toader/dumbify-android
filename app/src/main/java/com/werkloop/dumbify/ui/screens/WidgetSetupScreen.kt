@@ -105,7 +105,6 @@ private fun WidgetPreview(state: WidgetSetupUiState, modifier: Modifier = Modifi
     Blueprint(
         modifier = modifier.fillMaxWidth(),
         borderColor = theme.accent900,
-        markColor = theme.accent700,
     ) {
         Column(
             Modifier
